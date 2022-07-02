@@ -4,7 +4,8 @@ require('dotenv').config();
 const app = express()
 const {
   MongoClient,
-  ServerApiVersion
+  ServerApiVersion,
+  ObjectId
 } = require('mongodb');
 const port = process.env.PORT || 4000;
 
@@ -26,7 +27,7 @@ async function run() {
     await client.connect();
     const dataCollection = client.db("dailytask").collection("data");
 
-    app.get("/data", async (req, res) => {
+    app.get("/datas", async (req, res) => {
       const query = {};
       const cursor = dataCollection.find(query);
       const data = await cursor.toArray();
@@ -36,6 +37,28 @@ async function run() {
     app.post("/createTodo", async (req, res) => {
       const todo = req.body;
       const result = await dataCollection.insertOne(todo);
+      res.send(result);
+    });
+
+    app.put("/data/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      console.log("from data update", data);
+
+      console.log("from put", id);
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          title: data.title,
+        },
+      };
+      const result = await dataCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
 
